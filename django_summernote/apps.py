@@ -13,7 +13,7 @@ class DjangoSummernoteConfig(AppConfig):
     config = {}
 
     def __init__(self, app_name, app_module):
-        super(DjangoSummernoteConfig, self).__init__(app_name, app_module)
+        super().__init__(app_name, app_module)
         self.update_config()
 
     def get_default_config(self):
@@ -97,7 +97,7 @@ class DjangoSummernoteConfig(AppConfig):
     def _copy_old_configs(self, user, default):
         """
         NOTE: Will be deprecated from 0.9
-        Copying old-style settings for backword-compatibility
+        Copying old-style settings for backward-compatibility
         """
         DEPRECATED_SUMMERNOTE_CONFIGS = (
             'width',

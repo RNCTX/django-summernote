@@ -17,7 +17,7 @@ SETUP
 
        pip install django-summernote
 
-2. Add `django_summernote` to `INSTALLED_APP` in `settings.py`.
+2. Add `django_summernote` to `INSTALLED_APPS` in `settings.py`.
 
        INSTALLED_APPS += ('django_summernote', )
 
@@ -54,14 +54,9 @@ SETUP
            if settings.DEBUG:
                urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
-     - Please, read the official document more in detail: <https://docs.djangoproject.com/en/1.11/topics/files/>
+     - Please, read the [official v3.0 documentation](https://docs.djangoproject.com/en/3.0/topics/files/) for more details on file uploads.
 
-5. If you're using Django 3.x with default SummernoteWidget, then
-
-     - Do not forget to set `X_FRAME_OPTIONS = 'SAMEORIGIN'` in your django settings.
-     - [Clickjacking Protection](https://docs.djangoproject.com/en/3.0/ref/clickjacking/)
-
-6. Run database migration for preparing attachment model.
+5. Run database migration for preparing attachment model.
 
        python manage.py migrate
 
@@ -82,7 +77,7 @@ class SomeModelAdmin(SummernoteModelAdmin):  # instead of ModelAdmin
 admin.site.register(SomeModel, SomeModelAdmin)
 ```
 
-### Apply summernote to not all TextField in model
+### Apply summernote only to specific TextField in model
 Although `Post` model has several TextField, only `content` field will have `SummernoteWidget`.
 
 In `admin.py`,
@@ -129,16 +124,35 @@ Last, please don't forget to use `safe` templatetag while displaying in template
 
     {{ foobar|safe }}
 
+__Warning__: Please mind, that the widget does not provide any escaping. If you expose the widget to external users without taking care of this, it could potentially lead to an injection vulnerability. Therefore you can use the SummernoteTextFormField or SummernoteTextField, which escape all harmful tags through mozilla's package bleach:
+
+In `forms`,
+```python
+from django_summernote.fields import SummernoteTextFormField, SummernoteTextField
+
+class SomeForm(forms.Form):
+    foo = SummernoteTextFormField()
+
+```
+
+And for `ModelForm`,
+
+```python
+class FormForSomeModel(forms.ModelForm):
+    foo = SummernoteTextField()
+```
 
 THEMES
 ------
 
-django-summernote is served with Bootstrap3 by default, but you can choose another options.
-You can change the theme by `SUMMERNOTE_THEME = '<theme_name>'` in `settings.py`.
+django-summernote is served with Bootstrap3 by default, but you can choose other options.
+You can change the theme by setting `SUMMERNOTE_THEME = '<theme_name>'` in `settings.py`.
 
- - Bootstrap3 (`bs3`)
- - Bootstrap4 (`bs4`)
- - Lite UI (Summernote standalone) (`lite`)
+`SUMMERNOTE_THEME` accepts the following values:
+
+ - `bs3`: Bootstrap3 theme
+ - `bs4`: Bootstrap4 theme
+ - `lite`: Lite UI theme (without Bootstrap)
 
 In settings.py
 
@@ -159,9 +173,9 @@ SUMMERNOTE_CONFIG = {
     # Using SummernoteWidget - iframe mode, default
     'iframe': True,
 
-    # Or, you can set it as False to use SummernoteInplaceWidget by default - no iframe mode
-    # In this case, you have to load Bootstrap/jQuery stuff by manually.
-    # Use this when you're already using Bootstraip/jQuery based themes.
+    # Or, you can set it to `False` to use SummernoteInplaceWidget by default - no iframe mode
+    # In this case, you have to load Bootstrap/jQuery sources and dependencies manually.
+    # Use this when you're already using Bootstrap/jQuery based themes.
     'iframe': False,
 
     # You can put custom Summernote settings
@@ -176,7 +190,20 @@ SUMMERNOTE_CONFIG = {
         # Use proper language setting automatically (default)
         'lang': None,
 
-        # Or, set editor language/locale forcely
+        # Toolbar customization
+        # https://summernote.org/deep-dive/#custom-toolbar-popover
+        'toolbar': [
+            ['style', ['style']],
+            ['font', ['bold', 'underline', 'clear']],
+            ['fontname', ['fontname']],
+            ['color', ['color']],
+            ['para', ['ul', 'ol', 'paragraph']],
+            ['table', ['table']],
+            ['insert', ['link', 'picture', 'video']],
+            ['view', ['fullscreen', 'codeview', 'help']],
+        ],
+
+        # Or, explicitly set language/locale for editor
         'lang': 'ko-KR',
         ...
 
@@ -192,7 +219,7 @@ SUMMERNOTE_CONFIG = {
         },
     },
 
-    # Need authentication while uploading attachments.
+    # Require users to be authenticated for uploading attachments.
     'attachment_require_authentication': True,
 
     # Set `upload_to` function for attachments.
@@ -204,10 +231,10 @@ SUMMERNOTE_CONFIG = {
     # Set custom model for attachments (default: 'django_summernote.Attachment')
     'attachment_model': 'my.custom.attachment.model', # must inherit 'django_summernote.AbstractAttachment'
 
-    # You can disable attachment feature.
+    # You can completely disable the attachment feature.
     'disable_attachment': False,
 
-    # Set `True` to return attachment paths in absolute URIs.
+    # Set to `True` to return attachment paths in absolute URIs.
     'attachment_absolute_uri': False,
 
     # test_func in summernote upload view. (Allow upload images only when user passes the test)
@@ -237,7 +264,7 @@ SUMMERNOTE_CONFIG = {
         '//cdnjs.cloudflare.com/ajax/libs/codemirror/5.29.0/theme/monokai.min.css',
     ),
 
-    # Lazy initialize
+    # Lazy initialization
     # If you want to initialize summernote at the bottom of page, set this as True
     # and call `initSummernote()` on your page.
     'lazy': True,
@@ -257,7 +284,7 @@ SUMMERNOTE_CONFIG = {
   - About Air-mode, see [Summernote air-mode example page](http://summernote.org/examples/#air-mode).
   - About toolbar customization, please refer [Summernote toolbar section](http://summernote.org/deep-dive/#custom-toolbar-popover).
 
-Or, you can styling editor via attributes of the widget. These adhoc styling will override settings from `SUMMERNOTE_CONFIG`.
+You can style the editor via widget's attributes. These adhoc styling will override settings from `SUMMERNOTE_CONFIG`.
 
 ```python
 # Apply adhoc style via attributes
@@ -280,7 +307,7 @@ Run `tox`. If you don't have it, just `pip install tox`
 
 You can also run test with only specified targets.
 ```
-$ tox -e py27-dj111, py38-dj301
+$ tox -e py35-dj111, py38-dj301
 ```
 
 
